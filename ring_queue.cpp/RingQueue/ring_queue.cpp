@@ -59,16 +59,17 @@ public:
         
     public:
         reference operator*() {
-            return parent->buffer[parent->begin_index + offset] ;
+            return parent->buffer[(parent->begin_index + offset) % MAX_SIZE] ;
         }
         
         iterator& operator++(){
-            if (offset == parent->size()){
-                offset = parent->begin_index;
+            ++offset;
+            /*if (offset == (parent->size()-1)){
+                offset = 0;
             }
             else {
                 ++offset;
-            }
+            }*/
             /*if (parent->size() == MAX_SIZE){
                 if ((MAX_SIZE-1) == (parent->begin_index + offset)){
                  
@@ -91,7 +92,7 @@ public:
         }
         
         bool operator!=( const iterator& rhs ) const {
-            if ((parent == rhs.parent) && (offset = rhs.offset)){
+            if ((parent == rhs.parent) && (offset == rhs.offset)){
                 return false;
             }
             else {
@@ -155,7 +156,11 @@ private:
     
 public:
     // Constructor
-    RingQueue() : begin_index(0), ring_size(0) { }
+    RingQueue() : begin_index(0), ring_size(0) {
+        for (int i = 0; i < MAX_SIZE; ++i){
+            buffer[i] = ItemType();
+        }
+    }
     
     // Accessors. Note: 'back()' is not considered part of the array.
     ItemType front() const {
@@ -181,17 +186,17 @@ public:
     
     // Mutators
     void push_back( const ItemType& value ){
-        if (begin_index == MAX_SIZE-1){
-            buffer[0] = value;
-        }
-        else if (ring_size == 0){
-            buffer[0] = value;
+        if (ring_size < MAX_SIZE){
+            buffer[(begin_index+ring_size)%MAX_SIZE] = value;
             ++ring_size;
         }
         else {
-            buffer[((ring_size+begin_index)%MAX_SIZE)-1] = value;
-            if (ring_size < MAX_SIZE){
-                ++ring_size;
+            buffer[(begin_index+ring_size)%MAX_SIZE] = value;
+            if (begin_index == MAX_SIZE-1 &&((begin_index+ring_size)%MAX_SIZE) == begin_index){
+                begin_index = 0;
+            }
+            if (((begin_index+ring_size)%MAX_SIZE) == begin_index){
+                ++begin_index;
             }
         }
     }
@@ -206,18 +211,20 @@ public:
             }
             else {
                 ++begin_index;
+                
             }
         }
     }
     
     // Functions that return iterators
     iterator begin() {
+        std::cout << "being_index: " << begin_index << '\n';
         // Replace the line(s) below with your code.
         return iterator(this,0);
     }
     iterator end() {
         // Replace the line(s) below with your code.
-        return iterator(this,ring_size-1);
+        return iterator(this,ring_size);
     }
     
     // Miscellaneous functions
@@ -229,8 +236,9 @@ public:
     // Debugging functions
     void dump_queue() const {
         std::cout << "Raw queue...\n";
-        for ( size_t i = 0 ; i < MAX_SIZE ; ++i )
+        for (int i = 0 ; i < MAX_SIZE ; ++i ) {
             std::cout << "Val: " << buffer[i] << ", at: " << buffer+i << '\n';
+        }
         std::cout << '\n';
         return;
     }
@@ -241,35 +249,33 @@ int main(){
     RingQueue<int,7> rq;
     rq.dump_queue();
     
-    /*for ( int i = 0 ; i < 8 ; ++i )
+    for ( int i = 0 ; i < 8 ; ++i ){
         rq.push_back(i+1);
-    
+    }
     rq.dump_queue();
     rq.pop_front();
     
     std::cout << "Queue via size: \n";
     
     // RingQueue<int,7>::iterator it = rq.begin() ;
-    auto it = rq.begin() ;
+    auto it = rq.begin();
     for ( size_t i = 0 ; i < rq.size() ; ++i ) {
         std::cout << "Value: " << *it << ", address: " << &(*it) << '\n';
         ++it;
     }
     std::cout << '\n';
-    */
     
     
     // Uncomment the block below only when you have a working
     // implementation of RingQueue<ItemType,int>::end().
     // If the implementation is not correct, it might result in
     // an infinite loop.
-    /**
+    
      std::cout << "Queue via iterators: \n";
      for ( auto it = rq.begin() ; it != rq.end() ; ++it ) {
      std::cout << "Value: " << *it << ", address: " << &(*it) << '\n';
      }
      std::cout << '\n';
-     */
     
     
     
