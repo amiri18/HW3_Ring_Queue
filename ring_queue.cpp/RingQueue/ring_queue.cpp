@@ -59,28 +59,44 @@ public:
         
     public:
         reference operator*() {
-            // Replace the line(s) below with your code.
-            return parent->buffer[0] ;
+            return parent->buffer[parent->begin_index + offset] ;
         }
         
         iterator& operator++(){
-            // Replace the line(s) below with your code.
+            if (offset == parent->size()){
+                offset = parent->begin_index;
+            }
+            else {
+                ++offset;
+            }
+            /*if (parent->size() == MAX_SIZE){
+                if ((MAX_SIZE-1) == (parent->begin_index + offset)){
+                 
+                }
+            }
+            else {
+                ++offset;
+            }*/
             return *this;
         }
         
         iterator operator++( int unused ){
-            // Replace the line(s) below with your code.
-            return *this;
+           iterator copy(*this);
+            ++(*this);
+            return copy;
         }
         
         bool operator==( const iterator& rhs ) const {
-            // Replace the line(s) below with your code.
-            return true;
+            return ((parent == rhs.parent) && (offset = rhs.offset));
         }
         
         bool operator!=( const iterator& rhs ) const {
-            // Replace the line(s) below with your code.
-            return true;
+            if ((parent == rhs.parent) && (offset = rhs.offset)){
+                return false;
+            }
+            else {
+                return true;
+            }
         }
         
     };
@@ -132,7 +148,7 @@ private:
     // of the RingQueue
     int end_index() const {
         // Replace the line(s) below with your code.
-        return begin_index;
+        return (ring_size + begin_index) % MAX_SIZE;
     }
     
     
@@ -149,7 +165,7 @@ public:
         
         
         // Replace the line(s) below with your code.
-        return buffer[0];
+        return buffer[begin_index];
     }
     ItemType back() const {
         if ( ring_size == 0 ) std::cerr<< "Warning: Empty ring!\n" ;
@@ -158,17 +174,40 @@ public:
         
         
         // Replace the line(s) below with your code.
-        return buffer[0];
+        return buffer[end_index()];
     }
     
     
     
     // Mutators
     void push_back( const ItemType& value ){
-        return;
+        if (begin_index == MAX_SIZE-1){
+            buffer[0] = value;
+        }
+        else if (ring_size == 0){
+            buffer[0] = value;
+            ++ring_size;
+        }
+        else {
+            buffer[((ring_size+begin_index)%MAX_SIZE)-1] = value;
+            if (ring_size < MAX_SIZE){
+                ++ring_size;
+            }
+        }
     }
     void pop_front(){
-        return;
+        if (ring_size == 0) {
+            std::cerr << "Don't pop_front on an empty ring!\n";
+        }
+        else {
+            --ring_size;
+            if (begin_index == MAX_SIZE-1) {
+                begin_index = 0;
+            }
+            else {
+                ++begin_index;
+            }
+        }
     }
     
     // Functions that return iterators
@@ -178,13 +217,13 @@ public:
     }
     iterator end() {
         // Replace the line(s) below with your code.
-        return iterator(this,0);
+        return iterator(this,ring_size-1);
     }
     
     // Miscellaneous functions
     size_t size() const {
         // Replace the line(s) below with your code.
-        return 0;
+        return ring_size;
     }
     
     // Debugging functions
@@ -202,7 +241,7 @@ int main(){
     RingQueue<int,7> rq;
     rq.dump_queue();
     
-    for ( int i = 0 ; i < 8 ; ++i )
+    /*for ( int i = 0 ; i < 8 ; ++i )
         rq.push_back(i+1);
     
     rq.dump_queue();
@@ -217,7 +256,7 @@ int main(){
         ++it;
     }
     std::cout << '\n';
-    
+    */
     
     
     // Uncomment the block below only when you have a working
