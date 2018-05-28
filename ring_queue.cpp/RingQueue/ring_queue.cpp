@@ -91,31 +91,82 @@ public:
         
     };
 
-    
-    /**
      class const_iterator{
+         
      private:
-     RingQueue* parent;
-     int offset;
-     
-     private:
-     // Only RingQueue objects can create const_iterators...
-     const_iterator() ;
-     
+         // A link to the parent container
+         RingQueue* parent;
+         
+         // The position within the RingQueue is determined by how
+         // far ahead we are from the begining of the queue.
+         int offset;
+         
+         /**
+          private const_iterator constructor:
+          @param _parent , pointer to the RingQueue
+          @param _offset , position in queue (from the beginning)
+          */
+         const_iterator(RingQueue* _parent, int _offset = 0) : parent(_parent), offset(_offset) { }
+         
+         // convenient for the container and const_iterator classes to be granted friendship
+         friend class RingQueue<ItemType,MAX_SIZE>;
      public:
-     // ... however, const_iterators can be 'copied'.
-     const_iterator( const const_iterator& ) ;
-     
-     friend class RingQueue<ItemType,MAX_SIZE>;
+         /**
+          dereference overload:
+          @return a referenec to the object that the RingQueue is storing at the correct index
+          */
+         ItemType& operator*() {
+             return parent->buffer[(parent->begin_index + offset) % MAX_SIZE] ;
+         }
+         
+         /**
+          pre-increment overlad:
+          @return a reference to the const_iterator
+          */
+         const_iterator& operator++(){
+             // only need to increase offset in order to advance the array
+             ++offset;
+             return *this;
+         }
+         
+         /**
+          post-increment overload:
+          @return a copy of the const_iterator
+          */
+         const_iterator operator++(int unused){
+             const_iterator copy(*this);
+             ++(*this);
+             return copy;
+         }
+         
+         /**
+          equivalence overload:
+          @param rhs , iterator to check
+          @return true if they are equal, false if they are unequal
+          */
+         bool operator==(const const_iterator& rhs) const {
+             return ((parent == rhs.parent) && (offset = rhs.offset));
+         }
+         
+         /**
+          inequivalence overload:
+          @param rhs , iterator to check
+          @return true if they are not equal, false if they are equal
+          */
+         bool operator!=( const const_iterator& rhs ) const {
+             if ((parent == rhs.parent) && (offset == rhs.offset)){
+                 return false;
+             }
+             else {
+                 return true;
+             }
+         }
      };
-     */
     
 
     // Friendship goes both ways
     friend class iterator;
-    // friend class const_iterator;  // not implemented... yet.
-    
-    
+    friend class const_iterator;
     
 private:
     // A fixed-size static array with constant capacity that represents the RingQueue
@@ -218,6 +269,22 @@ public:
      */
     iterator end() { // remember that this is not an accurate index
         return iterator(this,ring_size);
+    }
+    
+    /**
+     const_iterator to the beginning:
+     @return an const_iterator that points to the beginning of the queue
+     */
+    const_iterator begin() const { // remember that offset = 0 here
+        return const_iterator(this,0);
+    }
+    
+    /**
+     const_iterator to (beyond) the end:
+     @return an const_iterator points past the end
+     */
+    const_iterator end() const { // remember that this is not an accurate index
+        return const_iterator(this,ring_size);
     }
     
    /**
